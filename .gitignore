@@ -1,3 +1,5 @@
 .env
 downloads/
 oauth.json
+cookies.txt
+music_downloader.log
