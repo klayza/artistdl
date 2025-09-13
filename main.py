@@ -293,7 +293,7 @@ def main():
     load_dotenv()
 
     # Setup logging
-    setup_logging("INFO")  # Change to "DEBUG" for more detailed logs
+    setup_logging("DEBUG")  # Change to "DEBUG" for more detailed logs
     logger = logging.getLogger(__name__)
 
     # Get API key
@@ -307,8 +307,8 @@ def main():
         downloader = MusicDownloader(api_key)
 
         # Download top tracks for an artist
-        artist = "Daft Punk"
-        limit = 10
+        artist = "C418"
+        limit = 100
 
         logger.info(f"Starting download for {artist}")
         stats = downloader.download_artist_top_tracks(artist, limit)
