@@ -186,7 +186,7 @@ class AudioDownloader:
 
 
 class MusicDownloader:
-    """Main class that orchestrates the music downloading process"""
+    """Main class to manage music downloads"""
 
     def __init__(
         self,
@@ -278,15 +278,6 @@ class MusicDownloader:
         return stats
 
 
-def setup_logging(level: str = "INFO") -> None:
-    """Setup logging configuration"""
-    logging.basicConfig(
-        level=getattr(logging, level.upper()),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler("music_downloader.log"), logging.StreamHandler()],
-    )
-
-
 def main():
     """Main function"""
     # Load environment variables
@@ -307,8 +298,8 @@ def main():
         downloader = MusicDownloader(api_key)
 
         # Download top tracks for an artist
-        artist = "C418"
-        limit = 100
+        artist = "Cerulean"
+        limit = 10
 
         logger.info(f"Starting download for {artist}")
         stats = downloader.download_artist_top_tracks(artist, limit)
