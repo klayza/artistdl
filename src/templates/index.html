@@ -5,16 +5,29 @@
 		<link rel="stylesheet" href="/static/style.css" />
 	</head>
 	<body>
-		<h1>Artist Downloader</h1>
-		<form action="/" method="post">
-			<label for="artist">Artist Name:</label>
-			<input type="text" id="artist" name="artist" required />
-			<label for="limit">Track Limit:</label>
-			<input type="number" id="limit" name="limit" value="2" />
-			<button type="submit">Download</button>
-		</form>
-		<h2>Download Queue</h2>
-		<pre id="queue"></pre>
+		<div class="container">
+			<div class="left-panel">
+				<div class="search-box">
+					<h2>Search</h2>
+					<form action="/" method="post">
+						<label for="artist">Artist Name:</label>
+						<input type="text" id="artist" name="artist" required />
+						<label for="limit">Track Limit:</label>
+						<input type="number" id="limit" name="limit" value="2" />
+						<button type="submit">Download</button>
+					</form>
+				</div>
+				<div class="progress-box">
+					<h2>Current Download</h2>
+					<div id="progress">No active downloads.</div>
+				</div>
+				<div class="queue-box">
+					<h2>Download Queue</h2>
+					<div id="queue"></div>
+				</div>
+			</div>
+			<div class="right-panel"></div>
+		</div>
 
 		<script>
 			function updateQueue() {
@@ -23,18 +36,36 @@
 					.then((data) => {
 						let queueText = ''
 						if (data.length > 0) {
-							data.forEach((item) => {
-								queueText += `Artist: ${item.artist}, Limit: ${item.limit}\n`
+							data.forEach((item, index) => {
+								if (item.status === 'downloading') {
+									queueText += `<div class="queue-item downloading">${item.artist} - ${item.limit} tracks</div>`
+								} else {
+									queueText += `<div class="queue-item">${item.artist} - ${item.limit} tracks</div>`
+								}
 							})
 						} else {
 							queueText = 'Queue is empty.'
 						}
-						document.getElementById('queue').textContent = queueText
+						document.getElementById('queue').innerHTML = queueText
 					})
 			}
 
-			setInterval(updateQueue, 5000)
+			function updateProgress() {
+				fetch('/progress')
+					.then((response) => response.json())
+					.then((data) => {
+						let progressText = 'No active downloads.'
+						if (data) {
+							progressText = `Downloading ${data.artist}: ${data.progress.toFixed(2)}%`
+						}
+						document.getElementById('progress').textContent = progressText
+					})
+			}
+
+			setInterval(updateQueue, 1000)
+			setInterval(updateProgress, 1000)
 			updateQueue()
+			updateProgress()
 		</script>
 	</body>
 </html>

@@ -39,6 +39,10 @@ def index():
 def queue():
     return jsonify(downloader.get_queue())
 
+@app.route("/progress")
+def progress():
+    return jsonify(downloader.get_progress())
+
 def main():
     """Main function"""
     app.run(debug=True)

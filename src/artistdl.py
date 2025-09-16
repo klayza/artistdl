@@ -201,10 +201,11 @@ class MusicDownloader:
         self.logger = logging.getLogger(__name__ + ".MusicDownloader")
         self.download_queue = []
         self.processing = False
+        self.current_download = None
 
     def add_artist_to_queue(self, artist: str, limit: int = 50):
         """Add an artist to the download queue."""
-        self.download_queue.append({"artist": artist, "limit": limit})
+        self.download_queue.append({"artist": artist, "limit": limit, "progress": 0, "status": "queued"})
         self.logger.info(f"Added {artist} to the download queue.")
         if not self.processing:
             self.process_queue()
@@ -219,15 +220,22 @@ class MusicDownloader:
     def _process_queue_thread(self):
         """The actual queue processing logic."""
         while self.download_queue:
-            item = self.download_queue.pop(0)
-            artist = item["artist"]
-            limit = item["limit"]
+            self.current_download = self.download_queue[0]
+            self.current_download["status"] = "downloading"
+            artist = self.current_download["artist"]
+            limit = self.current_download["limit"]
             self._download_artist_top_tracks(artist, limit)
+            self.download_queue.pop(0)
+            self.current_download = None
         self.processing = False
 
     def get_queue(self):
         """Return the current download queue."""
         return self.download_queue
+
+    def get_progress(self):
+        """Return the current download progress."""
+        return self.current_download
 
     def _download_artist_top_tracks(
         self, artist: str, limit: int = 50
@@ -281,6 +289,7 @@ class MusicDownloader:
             self.logger.info(
                 f"Downloading track {i}/{len(valid_tracks)}: {track.get('title')}"
             )
+            self.current_download["progress"] = (i / len(valid_tracks)) * 100
 
             # Use first artist name for subdirectory
             artist_name = (
@@ -332,10 +341,7 @@ def main():
         limit = 10
 
         logger.info(f"Starting download for {artist}")
-        stats = downloader.download_artist_top_tracks(artist, limit)
-
-        logger.info("Download process completed!")
-        logger.info(f"Final statistics: {stats}")
+        downloader.add_artist_to_queue(artist, limit)
 
     except Exception as e:
         logger.error(f"An error occurred: {e}", exc_info=True)
