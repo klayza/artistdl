@@ -8,12 +8,77 @@ import yt_dlp
 from dotenv import load_dotenv
 import threading
 import datetime
+import json
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3, TIT2, TPE1, TALB, TDRC, APIC
 
 
 class MusicDownloaderError(Exception):
     """Custom exception for music downloader errors"""
 
     pass
+
+
+class Tagger:
+    """Class to handle MP3 tagging"""
+
+    def __init__(self):
+        self.logger = logging.getLogger(__name__ + ".Tagger")
+
+    def download_album_art(self, url: str) -> Optional[bytes]:
+        """Download album art from a URL."""
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.content
+        except requests.RequestException as e:
+            self.logger.error(f"Failed to download album art: {e}")
+            return None
+
+    def apply_tags(
+        self,
+        file_path: str,
+        artist: str,
+        title: str,
+        album: str = None,
+        year: str = None,
+        artwork_url: str = None,
+    ):
+        """Apply tags to an MP3 file."""
+        try:
+            try:
+                audio = EasyID3(file_path)
+            except:
+                audio = ID3()
+
+            audio["artist"] = artist
+            audio["title"] = title
+            if album:
+                audio["album"] = album
+            if year:
+                audio["date"] = str(year)
+
+            audio.save(file_path)
+
+            if artwork_url:
+                artwork = self.download_album_art(artwork_url)
+                if artwork:
+                    audio = ID3(file_path)
+                    audio.add(
+                        APIC(
+                            encoding=3,  # 3 is for utf-8
+                            mime="image/jpeg",  # image/jpeg or image/png
+                            type=3,  # 3 is for the cover image
+                            desc="Cover",
+                            data=artwork,
+                        )
+                    )
+                    audio.save()
+
+            self.logger.info(f"Tagged: {artist} - {title}")
+
+        except Exception as e:
+            self.logger.error(f"Error tagging {file_path}: {str(e)}")
 
 
 class LastFMClient:
@@ -94,7 +159,7 @@ class YouTubeMusicClient:
 
         try:
             results = self.ytmusic.search(query, filter="songs")
-
+            # print(results)
             if not results:
                 self.logger.warning(f"No results found for: {query}")
                 return None
@@ -129,7 +194,7 @@ class AudioDownloader:
         self.audio_format = audio_format
         self.logger = logging.getLogger(__name__ + ".AudioDownloader")
 
-    def download_song(self, video_id: str, output_subdir: str = "") -> Optional[str]:
+    def download_song(self, video_id: str, output_subdir: str = "") -> Optional[Dict]:
         """
         Download a song by video ID
 
@@ -138,7 +203,7 @@ class AudioDownloader:
             output_subdir: Subdirectory within base output directory
 
         Returns:
-            Path to downloaded file or None if download failed
+            A dictionary containing the path to the downloaded file and the info dictionary from yt-dlp
         """
         if not video_id:
             self.logger.error("No video ID provided for download")
@@ -180,7 +245,7 @@ class AudioDownloader:
                 self.logger.info(f"Successfully downloaded: {info.get('title')}")
                 self.logger.debug(f"Output file: {output_file}")
 
-                return output_file
+                return {"output_file": output_file, "info": info}
 
         except Exception as e:
             self.logger.error(f"Failed to download video {video_id}: {e}")
@@ -195,19 +260,56 @@ class MusicDownloader:
         lastfm_api_key: str,
         output_dir: str = "downloads",
         audio_format: str = "mp3",
+        db_file: str = "database.json",
     ):
         self.lastfm_client = LastFMClient(lastfm_api_key)
         self.ytmusic_client = YouTubeMusicClient()
         self.audio_downloader = AudioDownloader(output_dir, audio_format)
+        self.tagger = Tagger()
         self.logger = logging.getLogger(__name__ + ".MusicDownloader")
         self.download_queue = []
         self.processing = False
         self.current_download = None
         self.output_dir = Path(output_dir)
+        self.db_file = Path(db_file)
+        self.database = self.load_database()
+
+    def load_database(self) -> List[Dict[str, str]]:
+        """Load the JSON database from file."""
+        if self.db_file.exists():
+            with open(self.db_file, "r") as f:
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError:
+                    return []
+        return []
+
+    def save_database(self):
+        """Save the database to the JSON file."""
+        with open(self.db_file, "w") as f:
+            json.dump(self.database, f, indent=4)
+
+    def is_duplicate(self, video_id: str) -> bool:
+        """Check if a video_id is already in the database."""
+        return any(song["id"] == video_id for song in self.database)
+
+    def add_to_database(self, video_id: str, artist: str, track: str):
+        """Add a new song to the database."""
+        self.database.append(
+            {
+                "id": video_id,
+                "artist": artist,
+                "track": track,
+                "download_date": datetime.datetime.now().strftime("%Y-%m-%d"),
+            }
+        )
+        self.save_database()
 
     def add_artist_to_queue(self, artist: str, limit: int = 50):
         """Add an artist to the download queue."""
-        self.download_queue.append({"artist": artist, "limit": limit, "progress": 0, "status": "queued"})
+        self.download_queue.append(
+            {"artist": artist, "limit": limit, "progress": 0, "status": "queued"}
+        )
         self.logger.info(f"Added {artist} to the download queue.")
         if not self.processing:
             self.process_queue()
@@ -240,18 +342,8 @@ class MusicDownloader:
         return self.current_download
 
     def get_downloaded_songs(self) -> List[Dict[str, str]]:
-        """Get a list of downloaded songs."""
-        songs = []
-        for artist_dir in self.output_dir.iterdir():
-            if artist_dir.is_dir():
-                for song_file in artist_dir.glob("*.mp3"):
-                    creation_time = os.path.getctime(song_file)
-                    songs.append({
-                        "artist": artist_dir.name, 
-                        "track_name": song_file.stem,
-                        "date_downloaded": datetime.datetime.fromtimestamp(creation_time).strftime('%b %d, %Y')
-                    })
-        return sorted(songs, key=lambda x: x["track_name"])
+        """Get a list of downloaded songs from the database."""
+        return sorted(self.database, key=lambda x: x["track"])
 
     def _download_artist_top_tracks(
         self, artist: str, limit: int = 50
@@ -299,7 +391,12 @@ class MusicDownloader:
         failed_count = 0
 
         for i, track in enumerate(valid_tracks, 1):
-            if not track:
+            if not track or not track.get("videoId"):
+                continue
+
+            video_id = track.get("videoId")
+            if self.is_duplicate(video_id):
+                self.logger.info(f"Skipping duplicate track: {track.get('title')}")
                 continue
 
             self.logger.info(
@@ -311,12 +408,22 @@ class MusicDownloader:
             artist_name = (
                 track.get("artists", [artist])[0] if track.get("artists") else artist
             )
-            result = self.audio_downloader.download_song(
-                track.get("videoId"), artist_name
-            )
+            result = self.audio_downloader.download_song(video_id, artist_name)
 
             if result:
                 downloaded_count += 1
+                info = result["info"]
+                print(info)
+                output_file = result["output_file"]
+                self.add_to_database(video_id, artist_name, track.get("title"))
+                self.tagger.apply_tags(
+                    output_file,
+                    artist_name,
+                    track.get("title"),
+                    album=info.get("album"),
+                    year=info.get("release_year"),
+                    artwork_url=info.get("thumbnail"),
+                )
                 self.logger.info(f"Successfully downloaded: {track.get('title')}")
             else:
                 failed_count += 1
@@ -339,7 +446,7 @@ def main():
     load_dotenv()
 
     # Setup logging
-    setup_logging("DEBUG")  # Change to "DEBUG" for more detailed logs
+    setup_logging("ERROR")
     logger = logging.getLogger(__name__)
 
     # Get API key

@@ -12,7 +12,7 @@ from artistdl import MusicDownloader
 load_dotenv()
 
 # Setup logging
-setup_logging("DEBUG")
+# setup_logging("ERROR")
 logger = logging.getLogger(__name__)
 
 # Get API key
@@ -26,6 +26,7 @@ downloader = MusicDownloader(api_key)
 
 app = Flask(__name__)
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -35,17 +36,21 @@ def index():
             downloader.add_artist_to_queue(artist, limit)
     return render_template("index.html")
 
+
 @app.route("/queue")
 def queue():
     return jsonify(downloader.get_queue())
+
 
 @app.route("/progress")
 def progress():
     return jsonify(downloader.get_progress())
 
+
 @app.route("/downloads")
 def downloads():
     return jsonify(downloader.get_downloaded_songs())
+
 
 def main():
     """Main function"""

@@ -41,9 +41,9 @@
 					<thead>
 						<tr>
 							<th>#</th>
-							<th>Track Name</th>
+							<th>Track</th>
 							<th>Artist</th>
-							<th>Date</th>
+							<th>Downloaded</th>
 						</tr>
 					</thead>
 					<tbody></tbody>
@@ -94,9 +94,9 @@
 							data.forEach((song, index) => {
 								let row = `<tr>
                                 <td>${index + 1}</td>
-                                <td>${song.track_name}</td>
+                                <td>${song.track}</td>
                                 <td>${song.artist}</td>
-                                <td>${song.date_downloaded}</td>
+                                <td>${song.download_date}</td>
                             </tr>`
 								tableBody.innerHTML += row
 							})
