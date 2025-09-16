@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Artist Downloader</title>
+		<title>ArtistDL</title>
 		<link rel="stylesheet" href="/static/style.css" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Nova+Mono&display=swap" rel="stylesheet" />
 	</head>
 	<body>
 		<div class="container">
@@ -10,10 +13,16 @@
 				<div class="search-box">
 					<h2>Search</h2>
 					<form action="/" method="post">
-						<label for="artist">Artist Name:</label>
-						<input type="text" id="artist" name="artist" required />
-						<label for="limit">Track Limit:</label>
-						<input type="number" id="limit" name="limit" value="2" />
+						<div class="flex-box">
+							<div>
+								<label for="artist">Artist Name:</label>
+								<input type="text" id="artist" name="artist" required />
+							</div>
+							<div>
+								<label for="limit">Track Limit:</label>
+								<input type="number" id="limit" name="limit" value="10" />
+							</div>
+						</div>
 						<button type="submit">Download</button>
 					</form>
 				</div>
@@ -26,7 +35,19 @@
 					<div id="queue"></div>
 				</div>
 			</div>
-			<div class="right-panel"></div>
+			<div class="right-panel">
+				<h2>Downloaded Songs</h2>
+				<table id="downloads-table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Track Name</th>
+							<th>Artist</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
 		</div>
 
 		<script>
@@ -62,10 +83,36 @@
 					})
 			}
 
+			function updateDownloads() {
+				fetch('/downloads')
+					.then((response) => response.json())
+					.then((data) => {
+						let tableBody = document.querySelector('#downloads-table tbody')
+						tableBody.innerHTML = ''
+						if (data.length > 0) {
+							data.forEach((song, index) => {
+								let row = `<tr>
+                                <td>${index + 1}</td>
+                                <td>${song.track_name}</td>
+                                <td>${song.artist}</td>
+                            </tr>`
+								tableBody.innerHTML += row
+							})
+						} else {
+							let row = `<tr>
+                            <td colspan="3">No songs downloaded yet.</td>
+                        </tr>`
+							tableBody.innerHTML = row
+						}
+					})
+			}
+
 			setInterval(updateQueue, 1000)
 			setInterval(updateProgress, 1000)
+			setInterval(updateDownloads, 5000)
 			updateQueue()
 			updateProgress()
+			updateDownloads()
 		</script>
 	</body>
 </html>

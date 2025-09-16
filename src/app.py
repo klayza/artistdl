@@ -43,6 +43,10 @@ def queue():
 def progress():
     return jsonify(downloader.get_progress())
 
+@app.route("/downloads")
+def downloads():
+    return jsonify(downloader.get_downloaded_songs())
+
 def main():
     """Main function"""
     app.run(debug=True)

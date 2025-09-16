@@ -202,6 +202,7 @@ class MusicDownloader:
         self.download_queue = []
         self.processing = False
         self.current_download = None
+        self.output_dir = Path(output_dir)
 
     def add_artist_to_queue(self, artist: str, limit: int = 50):
         """Add an artist to the download queue."""
@@ -236,6 +237,15 @@ class MusicDownloader:
     def get_progress(self):
         """Return the current download progress."""
         return self.current_download
+
+    def get_downloaded_songs(self) -> List[Dict[str, str]]:
+        """Get a list of downloaded songs."""
+        songs = []
+        for artist_dir in self.output_dir.iterdir():
+            if artist_dir.is_dir():
+                for song_file in artist_dir.glob("*.mp3"):
+                    songs.append({"artist": artist_dir.name, "track_name": song_file.stem})
+        return sorted(songs, key=lambda x: x["track_name"])
 
     def _download_artist_top_tracks(
         self, artist: str, limit: int = 50
