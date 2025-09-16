@@ -6,6 +6,7 @@ import requests
 from ytmusicapi import YTMusic
 import yt_dlp
 from dotenv import load_dotenv
+import threading
 
 
 class MusicDownloaderError(Exception):
@@ -198,8 +199,37 @@ class MusicDownloader:
         self.ytmusic_client = YouTubeMusicClient()
         self.audio_downloader = AudioDownloader(output_dir, audio_format)
         self.logger = logging.getLogger(__name__ + ".MusicDownloader")
+        self.download_queue = []
+        self.processing = False
 
-    def download_artist_top_tracks(
+    def add_artist_to_queue(self, artist: str, limit: int = 50):
+        """Add an artist to the download queue."""
+        self.download_queue.append({"artist": artist, "limit": limit})
+        self.logger.info(f"Added {artist} to the download queue.")
+        if not self.processing:
+            self.process_queue()
+
+    def process_queue(self):
+        """Process the download queue in a separate thread."""
+        if not self.processing and self.download_queue:
+            self.processing = True
+            thread = threading.Thread(target=self._process_queue_thread)
+            thread.start()
+
+    def _process_queue_thread(self):
+        """The actual queue processing logic."""
+        while self.download_queue:
+            item = self.download_queue.pop(0)
+            artist = item["artist"]
+            limit = item["limit"]
+            self._download_artist_top_tracks(artist, limit)
+        self.processing = False
+
+    def get_queue(self):
+        """Return the current download queue."""
+        return self.download_queue
+
+    def _download_artist_top_tracks(
         self, artist: str, limit: int = 50
     ) -> Dict[str, int]:
         """

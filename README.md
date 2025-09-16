@@ -35,7 +35,6 @@ This method is not very fast, I downloaded 100 songs and on average it takes 30 
   - store ytm id for every song (so we avoid downloading duplicates)
 
 - frontend
-  - download
   - download progress
   - view downloads (speed dial view)
   - view artists
