@@ -7,6 +7,7 @@ from ytmusicapi import YTMusic
 import yt_dlp
 from dotenv import load_dotenv
 import threading
+import datetime
 
 
 class MusicDownloaderError(Exception):
@@ -244,7 +245,12 @@ class MusicDownloader:
         for artist_dir in self.output_dir.iterdir():
             if artist_dir.is_dir():
                 for song_file in artist_dir.glob("*.mp3"):
-                    songs.append({"artist": artist_dir.name, "track_name": song_file.stem})
+                    creation_time = os.path.getctime(song_file)
+                    songs.append({
+                        "artist": artist_dir.name, 
+                        "track_name": song_file.stem,
+                        "date_downloaded": datetime.datetime.fromtimestamp(creation_time).strftime('%b %d, %Y')
+                    })
         return sorted(songs, key=lambda x: x["track_name"])
 
     def _download_artist_top_tracks(

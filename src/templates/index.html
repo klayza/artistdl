@@ -43,6 +43,7 @@
 							<th>#</th>
 							<th>Track Name</th>
 							<th>Artist</th>
+							<th>Date</th>
 						</tr>
 					</thead>
 					<tbody></tbody>
@@ -95,12 +96,13 @@
                                 <td>${index + 1}</td>
                                 <td>${song.track_name}</td>
                                 <td>${song.artist}</td>
+                                <td>${song.date_downloaded}</td>
                             </tr>`
 								tableBody.innerHTML += row
 							})
 						} else {
 							let row = `<tr>
-                            <td colspan="3">No songs downloaded yet.</td>
+                            <td colspan="4">No songs downloaded yet.</td>
                         </tr>`
 							tableBody.innerHTML = row
 						}
