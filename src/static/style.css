@@ -1,5 +1,10 @@
-body {
+* {
 	font-family: Nova Mono;
+	font-size: 20px;
+	box-sizing: border-box;
+}
+
+body {
 	background-color: #000000;
 	color: #d3d3d3;
 	margin: 0;
@@ -48,6 +53,7 @@ form {
 .flex-box {
 	display: flex;
 	align-items: center;
+	gap: 50px;
 }
 
 input {
@@ -56,7 +62,7 @@ input {
 	border: 1px solid #f2f2f2;
 	background-color: #141414;
 	color: #f2f2f2;
-	width: 80%;
+	width: 100%;
 }
 
 button {
