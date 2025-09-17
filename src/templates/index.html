@@ -34,6 +34,15 @@
 					<h2>Download Queue</h2>
 					<div id="queue"></div>
 				</div>
+				<div class="add-multiple-box">
+					<button id="add-multiple-btn">Add multiple artists</button>
+					<div id="add-multiple-form" style="display: none">
+						<form action="/add_multiple" method="post">
+							<textarea name="artists" rows="5"></textarea>
+							<button type="submit">Submit</button>
+						</form>
+					</div>
+				</div>
 			</div>
 			<div class="right-panel">
 				<h2>Downloaded Songs</h2>
@@ -52,6 +61,11 @@
 		</div>
 
 		<script>
+			document.getElementById('add-multiple-btn').addEventListener('click', function () {
+				document.getElementById('add-multiple-form').style.display = 'block'
+				this.style.display = 'none'
+			})
+
 			function updateQueue() {
 				fetch('/queue')
 					.then((response) => response.json())

@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from ytmusicapi import YTMusic
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 from util import setup_logging
 from artistdl import MusicDownloader
@@ -35,6 +35,15 @@ def index():
         if artist:
             downloader.add_artist_to_queue(artist, limit)
     return render_template("index.html")
+
+@app.route("/add_multiple", methods=["POST"])
+def add_multiple():
+    artists = request.form.get("artists")
+    if artists:
+        for artist in artists.splitlines():
+            if artist.strip():
+                downloader.add_artist_to_queue(artist.strip(), 25)
+    return redirect(url_for("index"))
 
 
 @app.route("/queue")
