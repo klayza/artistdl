@@ -258,19 +258,19 @@ class MusicDownloader:
     def __init__(
         self,
         lastfm_api_key: str,
-        output_dir: str = "downloads",
+        output_dir: str = os.getenv("DOWNLOAD_DIR"),
         audio_format: str = "mp3",
         db_file: str = "database.json",
     ):
         self.lastfm_client = LastFMClient(lastfm_api_key)
         self.ytmusic_client = YouTubeMusicClient()
-        self.audio_downloader = AudioDownloader(output_dir, audio_format)
+        self.output_dir = Path(output_dir if output_dir else "downloads")
+        self.audio_downloader = AudioDownloader(self.output_dir, audio_format)
         self.tagger = Tagger()
         self.logger = logging.getLogger(__name__ + ".MusicDownloader")
         self.download_queue = []
         self.processing = False
         self.current_download = None
-        self.output_dir = Path(output_dir)
         self.db_file = Path(db_file)
         self.database = self.load_database()
 
@@ -413,7 +413,7 @@ class MusicDownloader:
             if result:
                 downloaded_count += 1
                 info = result["info"]
-                print(info)
+                # print(info)
                 output_file = result["output_file"]
                 self.add_to_database(video_id, artist_name, track.get("title"))
                 self.tagger.apply_tags(

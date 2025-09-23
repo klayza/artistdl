@@ -7,7 +7,8 @@ Literally just type in the name of an artist and it downloads their top music. e
 You will need:
 
 - Last FM api key (get that here: https://www.last.fm/api/accounts)
-- cookies.txt (optional, but reccomended)
+- cookies.txt (optional, but reccomended. use this guide: https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp)
+
 
 Install:
 

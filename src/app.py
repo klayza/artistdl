@@ -63,7 +63,7 @@ def downloads():
 
 def main():
     """Main function"""
-    app.run(debug=True)
+    app.run(debug=True, port=4500, host="0.0.0.0")
 
 
 if __name__ == "__main__":
