@@ -57,6 +57,11 @@
 					</thead>
 					<tbody></tbody>
 				</table>
+				<div class="pagination">
+					<button id="prev-page">Previous</button>
+					<span id="page-info"></span>
+					<button id="next-page">Next</button>
+				</div>
 			</div>
 		</div>
 
@@ -98,30 +103,62 @@
 					})
 			}
 
+			let downloadedSongs = []
+			let currentPage = 1
+			const rowsPerPage = 25
+
+			function renderDownloadsTable() {
+				let tableBody = document.querySelector('#downloads-table tbody')
+				tableBody.innerHTML = ''
+				const start = (currentPage - 1) * rowsPerPage
+				const end = start + rowsPerPage
+				const paginatedSongs = downloadedSongs.slice(start, end)
+
+				if (paginatedSongs.length > 0) {
+					paginatedSongs.forEach((song, index) => {
+						let row = `<tr>
+							<td>${start + index + 1}</td>
+							<td>${song.track}</td>
+							<td>${song.artist}</td>
+							<td>${song.download_date}</td>
+						</tr>`
+						tableBody.innerHTML += row
+					})
+				} else {
+					let row = `<tr>
+						<td colspan="4">No songs downloaded yet.</td>
+					</tr>`
+					tableBody.innerHTML = row
+				}
+
+				document.getElementById('page-info').textContent = `Page ${currentPage} of ${Math.ceil(downloadedSongs.length / rowsPerPage)}`
+				document.getElementById('prev-page').disabled = currentPage === 1
+				document.getElementById('next-page').disabled = currentPage === Math.ceil(downloadedSongs.length / rowsPerPage)
+			}
+
 			function updateDownloads() {
 				fetch('/downloads')
 					.then((response) => response.json())
 					.then((data) => {
-						let tableBody = document.querySelector('#downloads-table tbody')
-						tableBody.innerHTML = ''
-						if (data.length > 0) {
-							data.forEach((song, index) => {
-								let row = `<tr>
-                                <td>${index + 1}</td>
-                                <td>${song.track}</td>
-                                <td>${song.artist}</td>
-                                <td>${song.download_date}</td>
-                            </tr>`
-								tableBody.innerHTML += row
-							})
-						} else {
-							let row = `<tr>
-                            <td colspan="4">No songs downloaded yet.</td>
-                        </tr>`
-							tableBody.innerHTML = row
-						}
-					})
+						data.sort((a, b) => new Date(b.download_date) - new Date(a.download_date));
+						downloadedSongs = data;
+						renderDownloadsTable();
+					});
 			}
+
+			document.getElementById('prev-page').addEventListener('click', () => {
+				if (currentPage > 1) {
+					currentPage--
+					renderDownloadsTable()
+				}
+			})
+
+			document.getElementById('next-page').addEventListener('click', () => {
+				if (currentPage < Math.ceil(downloadedSongs.length / rowsPerPage)) {
+					currentPage++
+					renderDownloadsTable()
+				}
+			})
 
 			setInterval(updateQueue, 1000)
 			setInterval(updateProgress, 5000)

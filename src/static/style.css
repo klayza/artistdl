@@ -1,3 +1,7 @@
+:root {
+	--border-color: #2b2b2bff;
+}
+
 * {
 	font-family: Nova Mono;
 	box-sizing: border-box;
@@ -26,7 +30,7 @@ body {
 .left-panel {
 	width: 33%;
 	padding: 20px;
-	border-right: 1px solid #f2f2f2;
+	border-right: 1px solid var(--border-color);
 	display: flex;
 	flex-direction: column;
 }
@@ -40,7 +44,7 @@ body {
 .search-box,
 .progress-box,
 .queue-box {
-	/* border: 1px solid #f2f2f2; */
+	/* border: 1px solid var(--border-color); */
 	padding: 10px;
 	margin-bottom: 20px;
 }
@@ -65,9 +69,9 @@ form {
 input {
 	margin: 5px;
 	padding: 10px;
-	border: 1px solid #f2f2f2;
+	border: 1px solid var(--border-color);
 	background-color: #141414;
-	color: #f2f2f2;
+	color: white;
 	width: 100%;
 	font-size: 20px;
 }
@@ -75,9 +79,9 @@ input {
 button {
 	margin: 5px;
 	padding: 10px 10px;
-	border: 1px solid #f2f2f2;
+	border: 1px solid var(--border-color);
 	background-color: #1a1a1a;
-	color: #f2f2f2;
+	color: white;
 	cursor: pointer;
 	font-size: 20px;
 }
@@ -101,7 +105,7 @@ table {
 
 th,
 td {
-	border: 1px solid #f2f2f2;
+	border: 1px solid var(--border-color);
 	padding: 8px;
 	text-align: left;
 	font-size: 20px;
@@ -119,8 +123,8 @@ thead {
 #add-multiple-form textarea {
 	width: 100%;
 	background-color: #141414;
-	color: #f2f2f2;
-	border: 1px solid #f2f2f2;
+	color: var(--border-color);
+	border: 1px solid var(--border-color);
 	font-size: 20px;
 	padding: 10px;
 	margin-bottom: 10px;
@@ -130,4 +134,19 @@ thead {
 #downloads-table {
 	overflow-y: scroll;
 	height: fit-content;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin: 0 10px;
+}
+
+.pagination span {
+    margin: 0 10px;
 }
