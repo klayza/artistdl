@@ -26,11 +26,7 @@ class FavoritesSync:
         self.tagger = Tagger()
         self.db_file = Path(db_file)
         self.database = self.load_database()
-        if not Path("oauth.json").exists():
-            logger.error("oauth.json not found. Please run 'ytmusicapi oauth' to generate it.")
-            self.ytmusic = None
-        else:
-            self.ytmusic = YTMusic("oauth.json")
+        self.ytmusic = YTMusic()
 
     def load_database(self) -> dict:
         if self.db_file.exists():
@@ -115,10 +111,15 @@ class FavoritesSync:
                     logger.debug(f"Skipping duplicate Spotify song: {song['artist']} - {song['title']}")
                     continue
 
-                logger.info(f"Searching for Spotify song: {song['artist']} - {song['title']}")
-                yt_song = self.ytmusic.search(f"{song['artist']} {song['title']}", filter="songs", limit=1)
-                if yt_song:
-                    video_id = yt_song[0]["videoId"]
+                query = f"{song['artist']} - {song['title']}"
+                logger.info(f"Searching for Spotify song: {query}")
+                yt_song_results = self.ytmusic.search(query, filter="songs", limit=1)
+                if yt_song_results:
+                    yt_song = yt_song_results[0]
+                    found_song_title = yt_song['title']
+                    found_song_artist = yt_song['artists'][0]['name'] if yt_song['artists'] else 'Unknown Artist'
+                    logger.info(f"Found YouTube Music song: {found_song_artist} - {found_song_title}")
+                    video_id = yt_song["videoId"]
                     result = self.audio_downloader.download_song(
                         video_id, "Favorites/Spotify"
                     )
@@ -128,8 +129,8 @@ class FavoritesSync:
                             result["output_file"],
                             song["artist"],
                             song["title"],
-                            album=yt_song[0].get("album", {}).get("name"),
-                            artwork_url=yt_song[0].get("thumbnails", [{}])[0].get("url"),
+                            album=yt_song.get("album", {}).get("name"),
+                            artwork_url=yt_song.get("thumbnails", [{}])[0].get("url"),
                         )
                         logger.info(f"Downloaded Spotify favorite: {song['artist']} - {song['title']}")
                     else:
