@@ -408,7 +408,9 @@ class MusicDownloader:
             artist_name = (
                 track.get("artists", [artist])[0] if track.get("artists") else artist
             )
-            result = self.audio_downloader.download_song(video_id, artist_name)
+            result = self.audio_downloader.download_song(
+                video_id, f"Artists/{artist_name}"
+            )
 
             if result:
                 downloaded_count += 1

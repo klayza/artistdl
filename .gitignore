@@ -6,3 +6,4 @@ music_downloader.log
 __pycache__
 database.json
 cookie2s.txt
+.cache

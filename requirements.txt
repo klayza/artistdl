@@ -1,3 +1,4 @@
 ytmusicapi
 yt-dlp
 dotenv
+spotipy
